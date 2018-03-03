@@ -18,8 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-
+#include <errno.h>
 
 #define maxln_Com_Amb 105 /*Numero de caracteres maximo para comando las variables de ambiente*/
 
@@ -97,26 +96,26 @@ void store_command(char ***argvv, char *filev[3], int bg, struct command* cmd)
   }
 }
 
-
 int main(void)
 {
-	char ***argvv;
+  char ***argvv;
 	//int command_counter;
 	int num_commands;
 	//int args_counter;
 	char *filev[3];
 	int bg;
 	int ret;
-
+  
 	setbuf(stdout, NULL);			/* Unbuffered */
 	setbuf(stdin, NULL);
-
   
   char HOME[maxln_Com_Amb];
   char PWD[maxln_Com_Amb];
 
   int tick = 0;
-  char *aux_comandos[20];
+  char aux_comandos[20][maxln_Com_Amb];
+  memset(aux_comandos,'\0',maxln_Com_Amb);
+  
   getcwd(PWD,maxln_Com_Amb); /*Obteniendo la ruta actual y cargando en PWD*/
   
   /*Funciones para MyTime*/
@@ -125,10 +124,10 @@ int main(void)
   strcpy(HOME,PWD);
   
   /*Funciones para MyEstructure*/
-  struct command cmd;
- 
+  
 	while (1) 
 	{
+    struct command cmd;
 		fprintf(stderr, "%s", "msh> ");	/* Prompt */
 		ret = obtain_order(&argvv, filev, &bg);
 		if (ret == 0) break;		/* EOF */
@@ -136,18 +135,62 @@ int main(void)
 		num_commands = ret - 1;		/* Line */
 		if (num_commands == 0) continue;	/* Empty line */
     store_command(argvv, filev, bg, &cmd);
-  
+   
+
     if(tick <= 19){
-      aux_comandos[tick] = **(cmd.argvv);
+      strcpy(aux_comandos[tick], cmd.argvv[0][0]);
+      for( int i = 0; i < cmd.num_commands; i++){
+          for (int j=0; j< cmd.args[i]; j++) {
+             if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
+                strcat(aux_comandos[tick], " ");
+                strcat(aux_comandos[tick], cmd.argvv[i][j]);
+             }
+          }
+        if(i+1 != cmd.num_commands){
+           strcat(aux_comandos[tick], " |");
+        }
+      }
+      
+		  if (cmd.filev[0] != NULL){
+         strcat(aux_comandos[tick], " < ");  
+         strcat(aux_comandos[tick], cmd.filev[0]);      
+      } 
+
+      if (cmd.filev[1] != NULL){
+         strcat(aux_comandos[tick], " > ");  
+         strcat(aux_comandos[tick], cmd.filev[1]);      
+      }
+      
+      if (cmd.filev[2] != NULL){
+         strcat(aux_comandos[tick], " >& ");  
+         strcat(aux_comandos[tick], cmd.filev[2]);      
+      }
+                                              
+      if(cmd.bg == 1){
+        strcat(aux_comandos[tick], " &");      
+      }
+        
     }
     else{
-      aux_comandos[tick%20] = **(cmd.argvv);
+      strcpy(aux_comandos[tick%20], cmd.argvv[0][0]);
+      for( int i = 0; i < cmd.num_commands; i++){
+          for (int j=0; j<cmd.args[i]; j++) {
+             if(i != 0 && j != 0){
+                strcat(aux_comandos[tick%20], " ");
+                strcat(aux_comandos[tick%20], cmd.argvv[i][j]);
+             }
+          }
+        if(i+1 != cmd.num_commands){
+           strcat(aux_comandos[tick%20], "| ");
+        }
+      }
     }
-    printf("Valor inicial: %s\n",**argvv);
+
       if(num_commands == 1){
       /*Comando EXIT*/
       if(strcmp(argvv[0][0], "exit") == 0){
           printf("Goodbye!\n");
+          free_command(&cmd);
           exit(-1);
       }
       /*Comando MYTIME*/
@@ -176,20 +219,28 @@ int main(void)
             }
         }
       } 
+      /*Comando MYHISTORY*/
       else if(strcmp(argvv[0][0], "myhistory")==0){
         if(argvv[0][1] == NULL){
           if(tick < 20){
-            for(int i = 0; i < tick; i++){
+            for(int i = 0 ; i < tick; i++){
                printf("%d %s\n",i, aux_comandos[i]);
             }
           }
           else{
-            for(int i = 0; i < 19; i++){
+            for(int i = 19; i >= 0; i--){
               printf("%d %s\n",i, aux_comandos[i]);
             }
           }  
         }
-        
+        else{
+          if((strlen(aux_comandos[atoi(argvv[0][1])])==0) || (atoi(argvv[0][1]) < 0) || (atoi(argvv[0][1]) > 20)){
+            fprintf(stderr, "%s","ERROR: Command not found\n");
+          }
+          else{
+            printf("Running command %s\n", argvv[0][1]);
+          }
+        }
       }
       else{  //Si es otro mandato
 				int pid;
@@ -198,7 +249,7 @@ int main(void)
 				switch(pid) {   
 					case -1: /* error */
 						fprintf(stderr, "%s","Error en el fork del mandato simple\n");
-						return (-1);
+						exit(-1);
 
 					case 0: /* hijo */
            // printf("Child %d\n",pid);
@@ -218,7 +269,7 @@ int main(void)
 						}
 						execvp(argvv[0][0], argvv[0]);
 						fprintf(stderr, "%s","Error en el execvp del mandato simple\n");
-						return(-1);
+						exit(-1);
 						
 					default: /* padre */
 						if(!bg){
@@ -238,7 +289,7 @@ int main(void)
 			switch(pid) {
 				case -1: /* error */
 					fprintf(stderr, "%s","Error en el fork del primer mandato\n");
-					return (-1);
+					exit(-1);
 					
 				case 0: /* hijo1 */
 					close(STDOUT_FILENO);
@@ -257,14 +308,14 @@ int main(void)
 					}
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
-					return(-1);
+					exit(-1);
 					
 				default: /* padre */
 					pid = fork();
 					switch(pid) {
 						case -1: /* error */
 							fprintf(stderr, "%s","Error en el fork del segundo mandato\n");
-							return (-1);
+							exit(-1);
 							
 						case 0: /* hijo 2*/
 							close(STDIN_FILENO);
@@ -283,7 +334,7 @@ int main(void)
 							}
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
-							return(-1);
+							exit(-1);
 							
 						default: /* padre */
 							close(fd[0]);
@@ -303,7 +354,7 @@ int main(void)
 			switch(pid) {
 				case -1: /* error */
 					fprintf(stderr, "%s","Error en el fork del primer mandato\n");
-					return (-1);
+					exit(-1);
 					
 				case 0: /* hijo1 */
 					close(STDOUT_FILENO);
@@ -322,7 +373,7 @@ int main(void)
 					}
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
-					return(-1);
+					exit(-1);
 					
 				default: /* padre */
 					pipe(fd2);
@@ -330,7 +381,7 @@ int main(void)
 					switch(pid) {
 						case -1: /* error */
 							fprintf(stderr, "%s","Error en el fork del segundo mandato\n");
-							return (-1);
+							exit(-1);
 							
 						case 0: /* hijo 2*/
 							close(STDIN_FILENO);
@@ -348,7 +399,7 @@ int main(void)
 							}
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
-							return(-1);
+							exit(-1);
 							
 						default: /* padre */
 							close(fd[0]);
@@ -357,7 +408,7 @@ int main(void)
 							switch(pid) {
 								case -1: /* error */
 									fprintf(stderr, "%s","Error en el fork del tercer mandato\n");
-									return (-1);
+									exit(-1);
 									
 								case 0: /* hijo 3*/
 									close(STDIN_FILENO);
@@ -377,7 +428,7 @@ int main(void)
 									}
 									execvp(argvv[2][0], argvv[2]);
 									fprintf(stderr, "%s","Error en el execvp del tercer mandato\n");
-									return(-1);
+									exit(-1);
 									
 								default: /* padre */
 									close(fd2[0]);
@@ -389,9 +440,7 @@ int main(void)
 							} 
 							
 					} 
-	
-			} 
-			
+			} 	
 		} 
     tick++;
 	} //fin while 
@@ -399,4 +448,3 @@ int main(void)
 	return 0;
 
 } //end main
-
