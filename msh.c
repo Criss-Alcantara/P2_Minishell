@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define maxln_Com_Amb 105 /*Numero de caracteres maximo para comando las variables de ambiente*/
+#define max_comandos 105
 
 extern int obtain_order();		/* See parser.y for description */
 
@@ -109,14 +109,14 @@ int main(void)
 	setbuf(stdout, NULL);			/* Unbuffered */
 	setbuf(stdin, NULL);
   
-  char HOME[maxln_Com_Amb];
-  char PWD[maxln_Com_Amb];
+  char HOME[max_comandos];
+  char PWD[max_comandos];
 
   int tick = 0;
-  char aux_comandos[20][maxln_Com_Amb];
-  memset(aux_comandos,'\0',maxln_Com_Amb);
+  char aux_comandos[20][max_comandos];
+  memset(aux_comandos,'\0',max_comandos);
   
-  getcwd(PWD,maxln_Com_Amb); /*Obteniendo la ruta actual y cargando en PWD*/
+  getcwd(PWD,max_comandos); /*Obteniendo la ruta actual y cargando en PWD*/
   
   /*Funciones para MyTime*/
   time_t comienzo, final;
@@ -135,13 +135,13 @@ int main(void)
 		num_commands = ret - 1;		/* Line */
 		if (num_commands == 0) continue;	/* Empty line */
     store_command(argvv, filev, bg, &cmd);
-   
-
+     
     if(tick <= 19){
       strcpy(aux_comandos[tick], cmd.argvv[0][0]);
       for( int i = 0; i < cmd.num_commands; i++){
           for (int j=0; j< cmd.args[i]; j++) {
              if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
+               strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
                 strcat(aux_comandos[tick], " ");
                 strcat(aux_comandos[tick], cmd.argvv[i][j]);
              }
@@ -193,6 +193,7 @@ int main(void)
           free_command(&cmd);
           exit(-1);
       }
+      
       /*Comando MYTIME*/
       else if(strcmp(argvv[0][0], "mytime") == 0){
         time(&final);
@@ -208,18 +209,19 @@ int main(void)
       else if(strcmp(argvv[0][0], "mycd") == 0){
         if(argvv[0][1] == NULL){
             chdir(HOME);
-            printf("%s\n",getcwd(PWD,maxln_Com_Amb));/*En caso de cambio exitoso actualizar PWD*/
+            printf("%s\n",getcwd(PWD,max_comandos));/*En caso de cambio exitoso actualizar PWD*/
         }
         else{
             if(chdir(argvv[0][1])!=0) { /*La func chdir hace el cambio de directorio si regresa un valor diferente de cero la operacion no se pudo ejecutar con exito*/
               printf("Error! %s no existe o no se puede cambiar a este directorio\n",argvv[0][1]);
             }   
             else {
-                printf("%s\n",getcwd(PWD,maxln_Com_Amb));/*En caso de cambio exitoso actualizar PWD*/
+                printf("%s\n",getcwd(PWD,max_comandos));/*En caso de cambio exitoso actualizar PWD*/
             }
         }
       } 
-      /*Comando MYHISTORY*/
+      
+        /*Comando MYHISTORY*/
       else if(strcmp(argvv[0][0], "myhistory")==0){
         if(argvv[0][1] == NULL){
           if(tick < 20){
@@ -233,7 +235,7 @@ int main(void)
             }
           }  
         }
-        else{
+        else{        
           if((strlen(aux_comandos[atoi(argvv[0][1])])==0) || (atoi(argvv[0][1]) < 0) || (atoi(argvv[0][1]) > 20)){
             fprintf(stderr, "%s","ERROR: Command not found\n");
           }
