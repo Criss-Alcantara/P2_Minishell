@@ -124,7 +124,6 @@ int main(void)
   strcpy(HOME,PWD);
   
   /*Funciones para MyEstructure*/
-  
 	while (1) 
 	{
     struct command cmd;
@@ -141,7 +140,7 @@ int main(void)
       for( int i = 0; i < cmd.num_commands; i++){
           for (int j=0; j< cmd.args[i]; j++) {
              if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
-               strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
+               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
                 strcat(aux_comandos[tick], " ");
                 strcat(aux_comandos[tick], cmd.argvv[i][j]);
              }
@@ -168,22 +167,48 @@ int main(void)
                                               
       if(cmd.bg == 1){
         strcat(aux_comandos[tick], " &");      
-      }
-        
+      }     
     }
     else{
-      strcpy(aux_comandos[tick%20], cmd.argvv[0][0]);
+      for(int i = 0; i <= 19; i++){
+        if(i != 19){
+            strcpy(aux_comandos[i], aux_comandos[i+1]);
+        }
+        else{
+            strcpy(aux_comandos[19], cmd.argvv[0][0]);
+        }
+      }
       for( int i = 0; i < cmd.num_commands; i++){
-          for (int j=0; j<cmd.args[i]; j++) {
-             if(i != 0 && j != 0){
-                strcat(aux_comandos[tick%20], " ");
-                strcat(aux_comandos[tick%20], cmd.argvv[i][j]);
+          for (int j=0; j< cmd.args[i]; j++) {
+             if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
+               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
+                strcat(aux_comandos[tick], " ");
+                strcat(aux_comandos[tick], cmd.argvv[i][j]);
              }
           }
         if(i+1 != cmd.num_commands){
-           strcat(aux_comandos[tick%20], "| ");
+           strcat(aux_comandos[tick], " |");
         }
       }
+      
+		  if (cmd.filev[0] != NULL){
+         strcat(aux_comandos[tick], " < ");  
+         strcat(aux_comandos[tick], cmd.filev[0]);      
+      } 
+
+      if (cmd.filev[1] != NULL){
+         strcat(aux_comandos[tick], " > ");  
+         strcat(aux_comandos[tick], cmd.filev[1]);      
+      }
+      
+      if (cmd.filev[2] != NULL){
+         strcat(aux_comandos[tick], " >& ");  
+         strcat(aux_comandos[tick], cmd.filev[2]);      
+      }
+                                              
+      if(cmd.bg == 1){
+        strcat(aux_comandos[tick], " &");      
+      }     
     }
 
       if(num_commands == 1){
@@ -230,7 +255,7 @@ int main(void)
             }
           }
           else{
-            for(int i = 19; i >= 0; i--){
+            for(int i = 0; i <= 19; i++){
               printf("%d %s\n",i, aux_comandos[i]);
             }
           }  
@@ -254,7 +279,6 @@ int main(void)
 						exit(-1);
 
 					case 0: /* hijo */
-           // printf("Child %d\n",pid);
 						if (filev[0] != NULL) {
 							close(STDIN_FILENO);
 							open(filev[0],O_RDONLY);
@@ -269,14 +293,15 @@ int main(void)
 							close(STDERR_FILENO);
 							open(filev[2],O_CREAT|O_WRONLY,0666);
 						}
+            printf("Child %d\n",getpid());
 						execvp(argvv[0][0], argvv[0]);
 						fprintf(stderr, "%s","Error en el execvp del mandato simple\n");
 						exit(-1);
 						
 					default: /* padre */
 						if(!bg){
-              //printf("Wait child %d\n",pid);
 							while (wait(&estado) != pid);
+              printf("Wait child %d\n",pid);
 						}else printf("%d\n",pid);
 		
 				} //fin switch (1 mandato)
@@ -308,6 +333,7 @@ int main(void)
 						close(STDERR_FILENO);
 						open(filev[2],O_CREAT|O_WRONLY,0666);
 					}
+          printf("Child %d\n",getpid());
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
 					exit(-1);
@@ -334,6 +360,7 @@ int main(void)
 								close(STDERR_FILENO);
 								open(filev[2],O_CREAT|O_WRONLY,0666);
 							}
+              printf("Child %d\n",getpid());
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
 							exit(-1);
@@ -343,6 +370,7 @@ int main(void)
 							close(fd[1]);
 							if(!bg){
 								while (wait(&estado) != pid);
+                printf("Wait child %d\n",pid);
 							}else printf("%d\n",pid);
 					} //fin switch2 (2 mandatos)	
 			} //fin switch1 (2 mandatso)
@@ -373,6 +401,7 @@ int main(void)
 						close(STDERR_FILENO);
 						open(filev[2],O_CREAT|O_WRONLY,0666);
 					}
+          printf("Child %d\n",getpid());
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
 					exit(-1);
@@ -399,6 +428,7 @@ int main(void)
 								close(STDERR_FILENO);
 								open(filev[2],O_CREAT|O_WRONLY,0666);
 							}
+              printf("Child %d\n",getpid());
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
 							exit(-1);
@@ -428,6 +458,7 @@ int main(void)
 										close(STDERR_FILENO);
 										open(filev[2],O_CREAT|O_WRONLY,0666);
 									}
+                  printf("Child %d\n",getpid());
 									execvp(argvv[2][0], argvv[2]);
 									fprintf(stderr, "%s","Error en el execvp del tercer mandato\n");
 									exit(-1);
@@ -437,6 +468,7 @@ int main(void)
 									close(fd2[1]);
 									if(!bg){
 										while (wait(&estado) != pid);
+                    printf("Wait child %d\n",pid);
 									}else printf("%d\n",pid);
 									
 							} 
