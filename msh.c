@@ -57,6 +57,7 @@ void free_command(struct command *cmd)
    for(f=0;f < 3; f++)
    {
      free((*cmd).filev[f]);
+     (*cmd).filev[f] = NULL;
    }
 }
 
@@ -140,7 +141,7 @@ int main(void)
       for( int i = 0; i < cmd.num_commands; i++){
           for (int j=0; j< cmd.args[i]; j++) {
              if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
-               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
+              
                 strcat(aux_comandos[tick], " ");
                 strcat(aux_comandos[tick], cmd.argvv[i][j]);
              }
@@ -149,25 +150,25 @@ int main(void)
            strcat(aux_comandos[tick], " |");
         }
       }
-      
-		  if (cmd.filev[0] != NULL){
+     
+		  if (filev[0] != NULL){
          strcat(aux_comandos[tick], " < ");  
-         strcat(aux_comandos[tick], cmd.filev[0]);      
+         strcat(aux_comandos[tick], filev[0]);
       } 
 
-      if (cmd.filev[1] != NULL){
+      if (filev[1] != NULL){
          strcat(aux_comandos[tick], " > ");  
-         strcat(aux_comandos[tick], cmd.filev[1]);      
+         strcat(aux_comandos[tick], filev[1]);      
       }
       
-      if (cmd.filev[2] != NULL){
+      if (filev[2] != NULL){
          strcat(aux_comandos[tick], " >& ");  
-         strcat(aux_comandos[tick], cmd.filev[2]);      
+         strcat(aux_comandos[tick], filev[2]);      
       }
                                               
       if(cmd.bg == 1){
         strcat(aux_comandos[tick], " &");      
-      }     
+      }
     }
     else{
       for(int i = 0; i <= 19; i++){
@@ -181,7 +182,6 @@ int main(void)
       for( int i = 0; i < cmd.num_commands; i++){
           for (int j=0; j< cmd.args[i]; j++) {
              if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
-               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
                 strcat(aux_comandos[tick], " ");
                 strcat(aux_comandos[tick], cmd.argvv[i][j]);
              }
@@ -190,22 +190,18 @@ int main(void)
            strcat(aux_comandos[tick], " |");
         }
       }
-      
-		  if (cmd.filev[0] != NULL){
+		  if (filev[0] != NULL){
          strcat(aux_comandos[tick], " < ");  
-         strcat(aux_comandos[tick], cmd.filev[0]);      
+         strcat(aux_comandos[tick], filev[0]);
       } 
-
-      if (cmd.filev[1] != NULL){
+      if (filev[1] != NULL){
          strcat(aux_comandos[tick], " > ");  
-         strcat(aux_comandos[tick], cmd.filev[1]);      
+         strcat(aux_comandos[tick], filev[1]);      
       }
-      
-      if (cmd.filev[2] != NULL){
+      if (filev[2] != NULL){
          strcat(aux_comandos[tick], " >& ");  
-         strcat(aux_comandos[tick], cmd.filev[2]);      
-      }
-                                              
+         strcat(aux_comandos[tick], filev[2]);      
+      }                                         
       if(cmd.bg == 1){
         strcat(aux_comandos[tick], " &");      
       }     
@@ -270,13 +266,13 @@ int main(void)
         }
       }
       else{  //Si es otro mandato
-				int pid;
+				int   pid;
 				int estado;
 				pid = fork();
-				switch(pid) {   
+				switch(pid) {
 					case -1: /* error */
 						fprintf(stderr, "%s","Error en el fork del mandato simple\n");
-						exit(-1);
+						return (-1);
 
 					case 0: /* hijo */
 						if (filev[0] != NULL) {
@@ -293,15 +289,13 @@ int main(void)
 							close(STDERR_FILENO);
 							open(filev[2],O_CREAT|O_WRONLY,0666);
 						}
-            printf("Child %d\n",getpid());
 						execvp(argvv[0][0], argvv[0]);
 						fprintf(stderr, "%s","Error en el execvp del mandato simple\n");
-						exit(-1);
+						return(-1);
 						
 					default: /* padre */
 						if(!bg){
 							while (wait(&estado) != pid);
-              printf("Wait child %d\n",pid);
 						}else printf("%d\n",pid);
 		
 				} //fin switch (1 mandato)
@@ -333,7 +327,6 @@ int main(void)
 						close(STDERR_FILENO);
 						open(filev[2],O_CREAT|O_WRONLY,0666);
 					}
-          printf("Child %d\n",getpid());
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
 					exit(-1);
@@ -360,7 +353,6 @@ int main(void)
 								close(STDERR_FILENO);
 								open(filev[2],O_CREAT|O_WRONLY,0666);
 							}
-              printf("Child %d\n",getpid());
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
 							exit(-1);
@@ -370,7 +362,6 @@ int main(void)
 							close(fd[1]);
 							if(!bg){
 								while (wait(&estado) != pid);
-                printf("Wait child %d\n",pid);
 							}else printf("%d\n",pid);
 					} //fin switch2 (2 mandatos)	
 			} //fin switch1 (2 mandatso)
@@ -391,17 +382,14 @@ int main(void)
 					dup(fd[1]);
 					close(fd[0]);
 					close(fd[1]);
-
 					if (filev[0] != NULL) {
 						close(STDIN_FILENO);
 						open(filev[0],O_RDONLY);
 					}
-
 					if (filev[2] != NULL) {
 						close(STDERR_FILENO);
 						open(filev[2],O_CREAT|O_WRONLY,0666);
 					}
-          printf("Child %d\n",getpid());
 					execvp(argvv[0][0], argvv[0]);
 					fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
 					exit(-1);
@@ -428,7 +416,6 @@ int main(void)
 								close(STDERR_FILENO);
 								open(filev[2],O_CREAT|O_WRONLY,0666);
 							}
-              printf("Child %d\n",getpid());
 							execvp(argvv[1][0], argvv[1]);
 							fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
 							exit(-1);
@@ -447,18 +434,14 @@ int main(void)
 									dup(fd2[0]);
 									close(fd2[0]);
 									close(fd2[1]);
-									
 									if (filev[1] != NULL) {
 									close(STDOUT_FILENO);
 									open(filev[1],O_CREAT|O_WRONLY,0666);
 									}
-									
-
 									if (filev[2] != NULL) {
 										close(STDERR_FILENO);
 										open(filev[2],O_CREAT|O_WRONLY,0666);
 									}
-                  printf("Child %d\n",getpid());
 									execvp(argvv[2][0], argvv[2]);
 									fprintf(stderr, "%s","Error en el execvp del tercer mandato\n");
 									exit(-1);
@@ -468,7 +451,6 @@ int main(void)
 									close(fd2[1]);
 									if(!bg){
 										while (wait(&estado) != pid);
-                    printf("Wait child %d\n",pid);
 									}else printf("%d\n",pid);
 									
 							} 
