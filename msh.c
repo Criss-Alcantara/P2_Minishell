@@ -135,81 +135,81 @@ int main(void)
 		if (num_commands == 0) continue;	/* Empty line */
     store_command(argvv, filev, bg, &cmd);
      
-    if(tick <= 19){
-      strcpy(aux_comandos[tick], cmd.argvv[0][0]);
-      for( int i = 0; i < cmd.num_commands; i++){
-          for (int j=0; j< cmd.args[i]; j++) {
-             if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
-               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
-                strcat(aux_comandos[tick], " ");
-                strcat(aux_comandos[tick], cmd.argvv[i][j]);
-             }
-          }
-        if(i+1 != cmd.num_commands){
-           strcat(aux_comandos[tick], " |");
-        }
-      }
+    // if(tick <= 19){
+    //   strcpy(aux_comandos[tick], cmd.argvv[0][0]);
+    //   for( int i = 0; i < cmd.num_commands; i++){
+    //       for (int j=0; j< cmd.args[i]; j++) {
+    //          if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
+    //            //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
+    //             strcat(aux_comandos[tick], " ");
+    //             strcat(aux_comandos[tick], cmd.argvv[i][j]);
+    //          }
+    //       }
+    //     if(i+1 != cmd.num_commands){
+    //        strcat(aux_comandos[tick], " |");
+    //     }
+    //   }
       
-		  if (cmd.filev[0] != NULL){
-         strcat(aux_comandos[tick], " < ");  
-         strcat(aux_comandos[tick], cmd.filev[0]);      
-      } 
+		  // if (cmd.filev[0] != NULL){
+    //      strcat(aux_comandos[tick], " < ");  
+    //      strcat(aux_comandos[tick], cmd.filev[0]);      
+    //   } 
 
-      if (cmd.filev[1] != NULL){
-         strcat(aux_comandos[tick], " > ");  
-         strcat(aux_comandos[tick], cmd.filev[1]);      
-      }
+    //   if (cmd.filev[1] != NULL){
+    //      strcat(aux_comandos[tick], " > ");  
+    //      strcat(aux_comandos[tick], cmd.filev[1]);      
+    //   }
       
-      if (cmd.filev[2] != NULL){
-         strcat(aux_comandos[tick], " >& ");  
-         strcat(aux_comandos[tick], cmd.filev[2]);      
-      }
+    //   if (cmd.filev[2] != NULL){
+    //      strcat(aux_comandos[tick], " >& ");  
+    //      strcat(aux_comandos[tick], cmd.filev[2]);      
+    //   }
                                               
-      if(cmd.bg == 1){
-        strcat(aux_comandos[tick], " &");      
-      }     
-    }
-    else{
-      for(int i = 0; i <= 19; i++){
-        if(i != 19){
-            strcpy(aux_comandos[i], aux_comandos[i+1]);
-        }
-        else{
-            strcpy(aux_comandos[19], cmd.argvv[0][0]);
-        }
-      }
-      for( int i = 0; i < cmd.num_commands; i++){
-          for (int j=0; j< cmd.args[i]; j++) {
-             if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
-               //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
-                strcat(aux_comandos[tick], " ");
-                strcat(aux_comandos[tick], cmd.argvv[i][j]);
-             }
-          }
-        if(i+1 != cmd.num_commands){
-           strcat(aux_comandos[tick], " |");
-        }
-      }
+    //   if(cmd.bg == 1){
+    //     strcat(aux_comandos[tick], " &");      
+    //   }     
+    // }
+    // else{
+    //   for(int i = 0; i <= 19; i++){
+    //     if(i != 19){
+    //         strcpy(aux_comandos[i], aux_comandos[i+1]);
+    //     }
+    //     else{
+    //         strcpy(aux_comandos[19], cmd.argvv[0][0]);
+    //     }
+    //   }
+    //   for( int i = 0; i < cmd.num_commands; i++){
+    //       for (int j=0; j< cmd.args[i]; j++) {
+    //          if((i >= 0 && j >= 1) || (i >= 1 && j >= 0) ){
+    //            //strcpy(aux_comandos_parser[i][j], cmd.argvv[i][j]);
+    //             strcat(aux_comandos[tick], " ");
+    //             strcat(aux_comandos[tick], cmd.argvv[i][j]);
+    //          }
+    //       }
+    //     if(i+1 != cmd.num_commands){
+    //        strcat(aux_comandos[tick], " |");
+    //     }
+    //   }
       
-		  if (cmd.filev[0] != NULL){
-         strcat(aux_comandos[tick], " < ");  
-         strcat(aux_comandos[tick], cmd.filev[0]);      
-      } 
+		  // if (cmd.filev[0] != NULL){
+    //      strcat(aux_comandos[tick], " < ");  
+    //      strcat(aux_comandos[tick], cmd.filev[0]);      
+    //   } 
 
-      if (cmd.filev[1] != NULL){
-         strcat(aux_comandos[tick], " > ");  
-         strcat(aux_comandos[tick], cmd.filev[1]);      
-      }
+    //   if (cmd.filev[1] != NULL){
+    //      strcat(aux_comandos[tick], " > ");  
+    //      strcat(aux_comandos[tick], cmd.filev[1]);      
+    //   }
       
-      if (cmd.filev[2] != NULL){
-         strcat(aux_comandos[tick], " >& ");  
-         strcat(aux_comandos[tick], cmd.filev[2]);      
-      }
+    //   if (cmd.filev[2] != NULL){
+    //      strcat(aux_comandos[tick], " >& ");  
+    //      strcat(aux_comandos[tick], cmd.filev[2]);      
+    //   }
                                               
-      if(cmd.bg == 1){
-        strcat(aux_comandos[tick], " &");      
-      }     
-    }
+    //   if(cmd.bg == 1){
+    //     strcat(aux_comandos[tick], " &");      
+    //   }     
+    // }
 
       if(num_commands == 1){
       /*Comando EXIT*/
