@@ -105,6 +105,8 @@ void MYTIME(int diff_t);
 
 void MYCD(char ***argvv, char *HOME, char *PWD);
 
+void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_counter, char *HOME, char *PWD, time_t comienzo, time_t final);
+
 int main(void)
 {
   char ***argvv;
@@ -120,7 +122,7 @@ int main(void)
   
   char HOME[max_comandos];
   char PWD[max_comandos];
-  int i, j, k;
+  int i;
 
   getcwd(PWD,max_comandos); /*Obteniendo la ruta actual y cargando en PWD*/
   strcpy(HOME,PWD);
@@ -164,7 +166,7 @@ int main(void)
           for (i=0; i <= liberar; i++){
             free_command(&comandos [i]);
           } 
-          exit(-1);
+          exit(0);
         }
       
         /*Comando MYTIME*/
@@ -182,52 +184,8 @@ int main(void)
 
         /*Comando MYHISTORY*/
         else if(strcmp(argvv[0][0], "myhistory")==0){
-          if(argvv[0][1] == NULL){ /* myhistory sin argumento*/
-            int imprimir = (command_counter < max_history)? command_counter : max_history - 1;
+        MYHISTORY(argvv, comandos, command_counter, HOME, PWD, comienzo, final);
 
-            for (i = 0; i < imprimir; i++){
-              printf ("%d ",i);
-              for (j = 0; j < comandos[i].num_commands; j++){
-                for (k = 0; k < comandos[i].args[j] ; k++){
-                  printf("%s ", comandos[i].argvv[j][k]);
-                }
-                if (j+1 != comandos[i].num_commands) printf ("| ");
-              }
-	
-              if (comandos[i].filev[0] != NULL) printf("< %s", comandos[i].filev[0]);/* IN */
-
-              if (comandos[i].filev[1] != NULL) printf("> %s", comandos[i].filev[1]);/* OUT */
-	
-              if (comandos[i].filev[2] != NULL) printf(">& %s", comandos[i].filev[2]);/* ERR */
-	
-              if (comandos[i].bg) printf(" &");
-              printf ("\n");
-            }            
-          }
-          else{ /* myhistory con argumento*/       
-          
-            if((comandos[atoi(argvv[0][1])].num_commands == 0) || (atoi(argvv[0][1]) < 0) || (atoi(argvv[0][1]) > 20)){
-              fprintf(stderr, "%s","ERROR: Command not found\n");
-            }
-            else{
-              printf("Running command %s\n", argvv[0][1]);
-              if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mytime") == 0){
-                time(&final);
-                int diff_t;
-                diff_t = difftime(final, comienzo);
-                MYTIME(diff_t);
-              }
-              else if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mycd") == 0){
-                MYCD(comandos[atoi (argvv[0][1])].argvv, HOME, PWD);
-              }
-              else{
-               ejecutar_comando(comandos[atoi (argvv[0][1])].argvv,
-                               comandos[atoi (argvv[0][1])].filev,
-                               comandos[atoi (argvv[0][1])].bg,
-                               comandos[atoi (argvv[0][1])].num_commands);
-              }  
-            }
-          }
         }
         else{  //Si es otro mandato simple
           ejecutar_comando(argvv, filev, bg, num_commands);
@@ -270,6 +228,66 @@ void MYCD(char ***argvv, char *HOME, char *PWD){
       printf("%s\n",getcwd(PWD,max_comandos));/*En caso de cambio exitoso actualizar PWD*/
     }
   }
+}
+
+void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_counter, char *HOME, char *PWD, time_t comienzo, time_t final){
+
+  int i,j,k;
+  if(argvv[0][1] == NULL){ /* myhistory sin argumento*/
+    int imprimir = (command_counter < max_history)? command_counter : max_history - 1;
+
+    for (i = 0; i < imprimir; i++){
+      printf ("%d ",i);
+      for (j = 0; j < comandos[i].num_commands; j++){
+        for (k = 0; k < comandos[i].args[j] ; k++){
+          printf("%s ", comandos[i].argvv[j][k]);
+        }
+        if (j+1 != comandos[i].num_commands) printf ("| ");
+      }
+	
+      if (comandos[i].filev[0] != NULL) printf("< %s", comandos[i].filev[0]);/* IN */
+
+      if (comandos[i].filev[1] != NULL) printf("> %s", comandos[i].filev[1]);/* OUT */
+	
+      if (comandos[i].filev[2] != NULL) printf(">& %s", comandos[i].filev[2]);/* ERR */
+	
+      if (comandos[i].bg) printf(" &");
+      printf ("\n");
+    }            
+  }
+  else{ /* myhistory con argumento*/       
+          
+    if((comandos[atoi(argvv[0][1])].num_commands == 0) || (atoi(argvv[0][1]) < 0) || (atoi(argvv[0][1]) > 20)){
+      fprintf(stderr, "%s","ERROR: Command not found\n");
+    }
+    else{
+      printf("Running command %s\n", argvv[0][1]);
+      if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mytime") == 0){
+        time(&final);
+        int diff_t;
+        diff_t = difftime(final, comienzo);
+        MYTIME(diff_t);
+      }
+      else if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mycd") == 0){
+        MYCD(comandos[atoi (argvv[0][1])].argvv, HOME, PWD);
+      }
+      else if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "myhistory")==0){
+        if((atoi (argvv[0][1])== (max_history-1)) || (atoi (argvv[0][1])== command_counter)){
+          /*Evitar llamadas recursiva a si mismo*/
+          fprintf(stderr, "%s","ERROR: Command not found\n");
+        }
+        else{
+          MYHISTORY(comandos[atoi (argvv[0][1])].argvv, comandos, command_counter, HOME, PWD, comienzo, final);
+        }
+      }
+      else{
+        ejecutar_comando(comandos[atoi (argvv[0][1])].argvv,
+                         comandos[atoi (argvv[0][1])].filev,
+                         comandos[atoi (argvv[0][1])].bg,
+                         comandos[atoi (argvv[0][1])].num_commands);
+      }  
+    }
+  }        
 }
              
 void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
