@@ -22,7 +22,7 @@
 
 #define max_comandos 105
 #define max_history 21 /* numero maximo de comandos que se guardan en el historial*/
-                      /*myhistory muestra 'maxhistory'-1 comandos anteriores*/
+                       /* myhistory muestra 'maxhistory'-1 comandos anteriores*/
 
 extern int obtain_order();		/* See parser.y for description */
 
@@ -237,19 +237,19 @@ void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_
     int imprimir = (command_counter < max_history)? command_counter : max_history - 1;
 
     for (i = 0; i < imprimir; i++){
-      printf ("%d ",i);
+      printf ("%d",i);
       for (j = 0; j < comandos[i].num_commands; j++){
         for (k = 0; k < comandos[i].args[j] ; k++){
-          printf("%s ", comandos[i].argvv[j][k]);
+          printf(" %s", comandos[i].argvv[j][k]);
         }
-        if (j+1 != comandos[i].num_commands) printf ("| ");
+        if (j+1 != comandos[i].num_commands) printf (" |");
       }
 	
-      if (comandos[i].filev[0] != NULL) printf("< %s", comandos[i].filev[0]);/* IN */
+      if (comandos[i].filev[0] != NULL) printf(" < %s", comandos[i].filev[0]);/* IN */
 
-      if (comandos[i].filev[1] != NULL) printf("> %s", comandos[i].filev[1]);/* OUT */
+      if (comandos[i].filev[1] != NULL) printf(" > %s", comandos[i].filev[1]);/* OUT */
 	
-      if (comandos[i].filev[2] != NULL) printf(">& %s", comandos[i].filev[2]);/* ERR */
+      if (comandos[i].filev[2] != NULL) printf(" >& %s", comandos[i].filev[2]);/* ERR */
 	
       if (comandos[i].bg) printf(" &");
       printf ("\n");
@@ -260,27 +260,33 @@ void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_
     if((comandos[atoi(argvv[0][1])].num_commands == 0) || (atoi(argvv[0][1]) < 0) || (atoi(argvv[0][1]) > 20)){
       fprintf(stderr, "%s","ERROR: Command not found\n");
     }
-    else{
-      printf("Running command %s\n", argvv[0][1]);
+    else{      
       if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mytime") == 0){
         time(&final);
         int diff_t;
         diff_t = difftime(final, comienzo);
+        printf("Running command %s\n", argvv[0][1]);
         MYTIME(diff_t);
       }
       else if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "mycd") == 0){
+        printf("Running command %s\n", argvv[0][1]);
         MYCD(comandos[atoi (argvv[0][1])].argvv, HOME, PWD);
       }
       else if(strcmp(comandos[atoi(argvv[0][1])].argvv[0][0], "myhistory")==0){
-        if((atoi (argvv[0][1])== (max_history-1)) || (atoi (argvv[0][1])== command_counter)){
-          /*Evitar llamadas recursiva a si mismo*/
+        /*Evitar llamadas recursivas a si mismo*/
+        if((atoi (argvv[0][1]) == (max_history-1)) || 
+           (atoi (argvv[0][1]) == command_counter) ||
+           (atoi (argvv[0][1]) <= atoi(comandos[atoi (argvv[0][1])].argvv[0][1]))){
+         
           fprintf(stderr, "%s","ERROR: Command not found\n");
         }
         else{
+          printf("Running command %s\n", argvv[0][1]);
           MYHISTORY(comandos[atoi (argvv[0][1])].argvv, comandos, command_counter, HOME, PWD, comienzo, final);
         }
       }
       else{
+        printf("Running command %s\n", argvv[0][1]);
         ejecutar_comando(comandos[atoi (argvv[0][1])].argvv,
                          comandos[atoi (argvv[0][1])].filev,
                          comandos[atoi (argvv[0][1])].bg,
@@ -342,6 +348,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       exit(-1);
 					
     case 0: /* hijo1 */
+      printf("Child %d\n",getpid());
       close(STDOUT_FILENO);
       dup(fd[1]);
       close(fd[0]);
@@ -361,6 +368,10 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       exit(-1);
 					
     default: /* padre */
+      if(!bg){
+        while (wait(&estado) != pid);
+        printf("Wait child %d\n",pid);
+      }
       pid = fork();
       switch(pid) {
       case -1: /* error */
@@ -368,6 +379,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         exit(-1);
 							
       case 0: /* hijo 2*/
+        printf("Child %d\n",getpid());
         close(STDIN_FILENO);
         dup(fd[0]);
         close(fd[0]);
@@ -391,6 +403,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         close(fd[1]);
         if(!bg){
           while (wait(&estado) != pid);
+          printf("Wait child %d\n",pid);
         }
       } //fin switch2 (2 mandatos)	
     } //fin switch1 (2 mandatos)
@@ -407,6 +420,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       exit(-1);
 					
     case 0: /* hijo1 */
+      printf("Child %d\n",getpid());
       close(STDOUT_FILENO);
       dup(fd[1]);
       close(fd[0]);
@@ -424,6 +438,10 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       exit(-1);
 					
     default: /* padre */
+      if(!bg){
+        while (wait(&estado) != pid);
+        printf("Wait child %d\n",pid);
+      }
       pipe(fd2);
       pid = fork();
       switch(pid) {
@@ -432,6 +450,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         exit(-1);
 							
       case 0: /* hijo 2*/
+        printf("Child %d\n",getpid());
         close(STDIN_FILENO);
         dup(fd[0]);
         close(STDOUT_FILENO);
@@ -450,6 +469,10 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         exit(-1);
 							
       default: /* padre */
+        if(!bg){
+          while (wait(&estado) != pid);
+          printf("Wait child %d\n",pid);
+        }
         close(fd[0]);
         close(fd[1]);
         pid = fork();
@@ -459,6 +482,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
           exit(-1);
 									
         case 0: /* hijo 3*/
+          printf("Child %d\n",getpid());
           close(STDIN_FILENO);
           dup(fd2[0]);
           close(fd2[0]);
@@ -480,6 +504,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
           close(fd2[1]);
           if(!bg){
             while (wait(&estado) != pid);
+            printf("Wait child %d\n",pid);
           }			
         } 						
       } 
