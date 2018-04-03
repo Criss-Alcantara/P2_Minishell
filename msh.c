@@ -74,15 +74,15 @@ void store_command(char ***argvv, char *filev[3], int bg, struct command* cmd)
   for(f=0;f < 3; f++)
   {
     if(filev[f] != NULL){
-      (*cmd).filev[f] = (char *) malloc(strlen(filev[f]) * sizeof(char));
+      (*cmd).filev[f] = (char *) calloc(strlen(filev[f]), sizeof(char));
       strcpy((*cmd).filev[f], filev[f]);
     }
-  }  
+  }
 
   (*cmd).bg = bg;
   (*cmd).num_commands = num_commands;
-  (*cmd).argvv = (char ***) malloc((num_commands+1) * sizeof(char **));
-  (*cmd).args = (int*) malloc(num_commands * sizeof(int));
+  (*cmd).argvv = (char ***) calloc((num_commands+1), sizeof(char **));
+  (*cmd).args = (int*) calloc(num_commands, sizeof(int));
   int i;
   for( i = 0; i < num_commands; i++){
     int args= 0;
@@ -90,10 +90,10 @@ void store_command(char ***argvv, char *filev[3], int bg, struct command* cmd)
       args++;
     }
     (*cmd).args[i] = args;
-    (*cmd).argvv[i] = (char **) malloc((args+1) * sizeof(char *));
+    (*cmd).argvv[i] = (char **) calloc((args+1), sizeof(char *));
     int j;
     for (j=0; j<args; j++) {
-       (*cmd).argvv[i][j] = (char *)malloc(strlen(argvv[i][j])*sizeof(char));
+       (*cmd).argvv[i][j] = (char *)calloc(strlen(argvv[i][j]), sizeof(char));
        strcpy((*cmd).argvv[i][j], argvv[i][j] );
     }
   }
@@ -304,7 +304,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
     pid = fork();
     switch(pid) {
     case -1: /* error */
-      fprintf(stderr, "%s","Error en el fork del mandato simple\n");
+	  perror("Error en el fork del mandato simple");
       exit (-1);
 
     case 0: /* hijo */
@@ -325,7 +325,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         open(filev[2],O_CREAT|O_WRONLY,0666);
       }
       execvp(argvv[0][0], argvv[0]);
-      fprintf(stderr, "%s","Error en el execvp del mandato simple\n");
+      perror("Error en el execvp del mandato simple");
       exit (-1);
 						
     default: /* padre */
@@ -344,7 +344,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
     pid = fork();
     switch(pid) {
     case -1: /* error */
-      fprintf(stderr, "%s","Error en el fork del primer mandato\n");
+      perror("Error en el fork del primer mandato");
       exit(-1);
 					
     case 0: /* hijo1 */
@@ -364,7 +364,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         open(filev[2],O_CREAT|O_WRONLY,0666);
       }
       execvp(argvv[0][0], argvv[0]);
-      fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
+      perror("Error en el execvp del primer mandato");
       exit(-1);
 					
     default: /* padre */
@@ -375,7 +375,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       pid = fork();
       switch(pid) {
       case -1: /* error */
-        fprintf(stderr, "%s","Error en el fork del segundo mandato\n");
+        perror("Error en el fork del segundo mandato");
         exit(-1);
 							
       case 0: /* hijo 2*/
@@ -395,7 +395,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
           open(filev[2],O_CREAT|O_WRONLY,0666);
         }
         execvp(argvv[1][0], argvv[1]);
-        fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
+        perror("Error en el execvp del segundo mandato");
         exit(-1);
 							
       default: /* padre */
@@ -416,7 +416,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
     pid = fork();
     switch(pid) {
     case -1: /* error */
-      fprintf(stderr, "%s","Error en el fork del primer mandato\n");
+      perror("Error en el fork del primer mandato");
       exit(-1);
 					
     case 0: /* hijo1 */
@@ -434,7 +434,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         open(filev[2],O_CREAT|O_WRONLY,0666);
       }
       execvp(argvv[0][0], argvv[0]);
-      fprintf(stderr, "%s","Error en el execvp del primer mandato\n");
+      perror("Error en el execvp del primer mandato");
       exit(-1);
 					
     default: /* padre */
@@ -446,7 +446,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       pid = fork();
       switch(pid) {
       case -1: /* error */
-        fprintf(stderr, "%s","Error en el fork del segundo mandato\n");
+        perror("Error en el fork del segundo mandato");
         exit(-1);
 							
       case 0: /* hijo 2*/
@@ -465,7 +465,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
           open(filev[2],O_CREAT|O_WRONLY,0666);
         }
         execvp(argvv[1][0], argvv[1]);
-        fprintf(stderr, "%s","Error en el execvp del segundo mandato\n");
+        perror("Error en el execvp del segundo mandato");
         exit(-1);
 							
       default: /* padre */
@@ -478,7 +478,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
         pid = fork();
         switch(pid) {
         case -1: /* error */
-          fprintf(stderr, "%s","Error en el fork del tercer mandato\n");
+          perror("Error en el fork del tercer mandato");
           exit(-1);
 									
         case 0: /* hijo 3*/
@@ -496,7 +496,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
             open(filev[2],O_CREAT|O_WRONLY,0666);
           }
           execvp(argvv[2][0], argvv[2]);
-          fprintf(stderr, "%s","Error en el execvp del tercer mandato\n");
+          perror("Error en el execvp del tercer mandato");
           exit(-1);
 									
         default: /* padre */
@@ -510,5 +510,7 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
       } 
     } 	
   } //fin if (numero de comandos = 3)
- 
+  else{
+    fprintf(stderr, "%s","Error en la cantidad de mandatos en secuencia, se limita a 3\n");
+  }
 }
