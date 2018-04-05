@@ -105,6 +105,7 @@ void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_
 
 int main(void)
 {
+
   char ***argvv;
   int command_counter; /*  guarda el nuero total de comandos introducidos en minishell */
   int num_commands;
@@ -115,6 +116,7 @@ int main(void)
   setbuf(stdout, NULL);			/*  Unbuffered  */
   setbuf(stdin, NULL);
   
+  /**Whre all the new stuff starts********************************/
   char HOME[max_comandos];
   char PWD[max_comandos];
   int i;
@@ -133,6 +135,7 @@ int main(void)
   
   command_counter = -1;
   
+  /*Given code from here as well*/
   while (1) {
       fprintf(stderr, "%s", "msh> ");	/*  Prompt  */
       ret = obtain_order(&argvv, filev, &bg);
@@ -141,6 +144,7 @@ int main(void)
       num_commands = ret - 1;		/*  Line  */
       if (num_commands == 0) continue;	/*  Empty line  */
 
+      /*New code *****from here*/
       command_counter++;
       if (command_counter < max_history){ /* Solo se guardan los 'max_history' ultimos comandos introducidos  */
         store_command(argvv, filev, bg, &comandos [command_counter]);
@@ -330,6 +334,10 @@ void ejecutar_comando(char ***argvv, char *filev[3], int bg, int num_commands){
 						close(STDIN_FILENO);
 						open(filev[0],O_RDONLY);
 					}
+          if (filev[1] != NULL) {
+            close(STDOUT_FILENO);
+            open(filev[1],O_CREAT|O_WRONLY,0700);
+          }
 					if (filev[2] != NULL) {
 						close(STDERR_FILENO);
 						open(filev[2],O_CREAT|O_WRONLY,0700);
