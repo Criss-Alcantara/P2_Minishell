@@ -20,7 +20,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define max_comandos 105
+#define max_ruta 4096 /* Longitud maxima de una ruta para la llamada getcwd */
 #define max_history 21 /*  Numero maximo de comandos que se guardan en el historial */
                        /*  Comando myhistory muestra los 'maxhistory'-1 comandos anteriores */
 
@@ -115,11 +115,11 @@ int main(void)
   setbuf(stdout, NULL);			/*  Unbuffered  */
   setbuf(stdin, NULL);
   
-  char HOME[max_comandos];
-  char PWD[max_comandos];
+  char HOME[max_ruta];
+  char PWD[max_ruta];
   int i;
 
-  getcwd(PWD,max_comandos); /* Obteniendo la ruta actual y cargando en PWD */
+  getcwd(PWD,max_ruta); /* Obteniendo la ruta actual y cargando en PWD */
   strcpy(HOME,PWD);
   
   /* Funciones para MyTime */
@@ -182,7 +182,7 @@ int main(void)
     }
     else{  /*  si num_comandos es 2 o 3 */
       ejecutar_comando(argvv, filev, bg, num_commands);         
-    } /* Fin if 	 */
+    } /* Fin if */
   } /* Fin while */
 
   /* Liberar la memoria con free_command */
@@ -207,21 +207,21 @@ void MYTIME(int diff_t){
 void MYCD(char ***argvv, char *HOME, char *PWD){
   if(argvv[0][1] == NULL){
     chdir(HOME);
-    printf("%s\n",getcwd(PWD,max_comandos));/* Si el cambio es correcto, se actualiza PWD */
+    printf("%s\n",getcwd(PWD,max_ruta));/* Si el cambio es correcto, se actualiza PWD */
   }
-  else{
+  else{ /* caso de mycd con argumento */
     if(chdir(argvv[0][1])!=0) { /* La funcion Chdir cambia el directorio, si regresa 0 la operacion se realizo con exito, en caso contrario retorna un valor diferente */
       printf("Error! %s no existe o no se puede cambiar a este directorio\n",argvv[0][1]);
     }   
     else {
-      printf("%s\n",getcwd(PWD,max_comandos));/* Si el cambio es correcto, se actualiza PWD */
+      printf("%s\n",getcwd(PWD,max_ruta));/* Si el cambio es correcto, se actualiza PWD */
     }
   }
 }
 
 void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_counter, char *HOME, char *PWD, time_t comienzo, time_t Final){
   int i,j,k;
-  if(argvv[0][1] == NULL){ /*  myhistory sin argumento */
+  if(argvv[0][1] == NULL){ /* myhistory sin argumento */
     int imprimir = (command_counter < max_history)? command_counter : max_history - 1;
     for (i = 0; i < imprimir; i++){
       printf ("%d",i);
@@ -240,7 +240,7 @@ void MYHISTORY(char ***argvv, struct command comandos[max_history], int command_
   }
   else{ /*  myhistory con argumento */
 
-    /* Argumento dentro de los límites del historial */
+    /* Argumento dentro de los limites del historial */
     if((comandos[atoi(argvv[0][1])].num_commands == 0) ||
        (atoi(argvv[0][1]) < 0) ||
        (atoi(argvv[0][1]) > (max_history -1)) ||
